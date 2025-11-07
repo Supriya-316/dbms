@@ -1,0 +1,97 @@
+-- Enable server output for Problem 2
+SET SERVEROUTPUT ON;
+
+/*
+-----------------------------------------------------------------
+-- PROBLEM 1: Merge with Parameterized Cursor
+-----------------------------------------------------------------
+*/
+
+
+-- Create tables for Problem 1
+CREATE TABLE N_RollCall (
+  roll_no INT PRIMARY KEY,
+  att NUMBER,
+  status CHAR(1)
+);
+
+CREATE TABLE O_RollCall (
+  roll_no INT PRIMARY KEY,
+  att NUMBER,
+  status CHAR(1)
+);
+
+-- Insert data for Problem 1
+INSERT INTO N_RollCall VALUES (1, 80, 'P');
+INSERT INTO N_RollCall VALUES (2, 70, 'A');
+INSERT INTO N_RollCall VALUES (3, 85, 'P');
+INSERT INTO N_RollCall VALUES (4, 65, 'A');
+
+INSERT INTO O_RollCall VALUES (1, 80, 'P'); -- Exists
+INSERT INTO O_RollCall VALUES (2, 70, 'A'); -- Exists
+
+-- Save the sample data so the procedure can see it
+COMMIT;
+
+-- PL/SQL Block for Problem 1
+DECLARE
+    CURSOR c_check_exists (p_roll O_RollCall.roll_no%TYPE) IS
+        SELECT roll_no
+        FROM O_RollCall
+        WHERE roll_no = p_roll;
+        
+    v_dummy_roll_no O_RollCall.roll_no%TYPE;
+
+BEGIN
+    FOR rec IN (SELECT * FROM N_RollCall) LOOP
+    
+        OPEN c_check_exists(rec.roll_no);
+        FETCH c_check_exists INTO v_dummy_roll_no;
+        
+        IF c_check_exists%NOTFOUND THEN
+            -- Row does not exist, so insert it
+            INSERT INTO O_RollCall (roll_no, att, status)
+            VALUES (rec.roll_no, rec.att, rec.status);
+        END IF;
+        
+        CLOSE c_check_exists;
+            
+    END LOOP;
+    
+    COMMIT; -- Save the new inserts
+END;
+/
+
+-- Show final merged table for Problem 1
+SELECT * FROM O_RollCall;
+
+
+/*
+-----------------------------------------------------------------
+-- PROBLEM 2: Employee Clerks
+-----------------------------------------------------------------
+-- Create table for Problem 2
+CREATE TABLE employees_1 (
+  designation VARCHAR2(100),
+  emp_name VARCHAR2(100),
+  manager_id INT
+);
+-- Insert data for Problem 2
+INSERT INTO employees_1 VALUES ('CLERK', 'John Doe', 130);
+INSERT INTO employees_1 VALUES ('CLERK', 'Jane Smith', 110);
+INSERT INTO employees_1 VALUES ('MANAGER', 'Mike Johnson', 140);
+INSERT INTO employees_1 VALUES ('CLERK', 'Alice Brown', 125);
+
+-- PL/SQL Block for Problem 2
+DECLARE
+  CURSOR c_emp IS
+    SELECT emp_name, designation
+    FROM employees_1
+    WHERE designation = 'CLERK' AND manager_id > 120;
+BEGIN
+  DBMS_OUTPUT.PUT_LINE('--- Clerks with Manager ID > 120 ---');
+  FOR emp_rec IN c_emp LOOP
+    DBMS_OUTPUT.PUT_LINE('Name: ' || emp_rec.emp_name || ', Designation: ' || emp_rec.designation);
+  END LOOP;
+END;
+/

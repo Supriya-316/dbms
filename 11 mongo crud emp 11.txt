@@ -1,0 +1,42 @@
+// 0. Switch to your database (if you haven't already)
+use myCompanyDB;
+
+// Clean up: Drop the collection if it already exists so we can start fresh
+db.employee.drop();
+
+// Create collection 'employee' and insert documents
+db.employee.insertMany([
+    { emp_id: 101, emp_name: "Amit", dept: "HR", salary: 75000, joining_date: new Date("2024-05-15") },
+    { emp_id: 102, emp_name: "Priya", dept: "Admin", salary: 60000, joining_date: new Date("2023-10-20") },
+    { emp_id: 103, emp_name: "Rahul", dept: "IT", salary: 90000, joining_date: new Date("2024-01-10") },
+    { emp_id: 104, emp_name: "Sneha", dept: "HR", salary: 55000, joining_date: new Date("2025-03-01") },
+    { emp_id: 105, emp_name: "John", dept: "Admin", salary: 45000, joining_date: new Date("2024-07-30") },
+    { emp_id: 106, emp_name: "Meera", dept: "IT", salary: 80000, joining_date: new Date("2025-02-15") }
+]);
+
+// 1. Find employees having salary greater than 50000
+db.employee.find({ salary: { $gt: 50000 } });
+
+// 2. Find employees having salary between 50000 and 80000
+// ($gte = greater than or equal, $lte = less than or equal)
+db.employee.find({ salary: { $gte: 50000, $lte: 80000 } });
+
+// 3. Find employees having salary more than 60000 from ‘HR’ department
+db.employee.find({ dept: "HR", salary: { $gt: 60000 } });
+
+// 4. Update Salaries of all employees from ‘Admin’ department by 5% increment
+// We use $mul (multiply) to increase by 5% (multiply by 1.05)
+db.employee.updateMany(
+    { dept: "Admin" },
+    { $mul: { salary: 1.05 } }
+);
+
+// 5. Delete employees from ‘HR department having joining date before 1 Jan 2025
+// We must compare against a real Date object
+db.employee.deleteMany({
+    dept: "HR",
+    joining_date: { $lt: new Date("2025-01-01") }
+});
+
+// 6. (Verification) Show the final state of the collection
+db.employee.find();

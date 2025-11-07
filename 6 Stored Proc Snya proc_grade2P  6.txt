@@ -1,0 +1,65 @@
+CREATE TABLE Stud_Marks_5555 (
+  roll_no NUMBER PRIMARY KEY,
+  name VARCHAR2(50),
+  total_marks NUMBER
+);
+
+CREATE TABLE Result_5555 (
+  roll_no NUMBER PRIMARY KEY,
+  name VARCHAR2(50),
+  class VARCHAR2(20)
+);
+
+
+
+
+INSERT INTO Stud_Marks_5555 VALUES (1, 'Alice', 1200);
+INSERT INTO Stud_Marks_5555 VALUES (2, 'Bob', 950);
+INSERT INTO Stud_Marks_5555 VALUES (3, 'Charlie', 870);
+INSERT INTO Stud_Marks_5555 VALUES (4, 'David', 700);
+COMMIT;
+
+CREATE OR REPLACE PROCEDURE proc_Grade(
+  p_name IN VARCHAR2,
+  p_marks IN NUMBER,
+  p_class OUT VARCHAR2
+) IS
+BEGIN
+  IF p_marks <= 1500 AND p_marks >= 990 THEN
+    p_class := 'Distinction';
+  ELSIF p_marks <= 989 AND p_marks >= 900 THEN
+    p_class := 'First Class';
+  ELSIF p_marks <= 899 AND p_marks >= 825 THEN
+    p_class := 'Higher Second Class';
+  ELSE
+    p_class := 'No Grade';
+  END IF;
+END;
+/
+
+DECLARE
+  v_class VARCHAR2(20);
+  v_exists NUMBER;
+BEGIN
+  FOR rec IN (
+    SELECT roll_no, name, total_marks
+    FROM Stud_Marks_5555
+    WHERE roll_no = &input_roll_no
+  ) LOOP
+    proc_Grade(rec.name, rec.total_marks, v_class);
+
+    SELECT COUNT(*) INTO v_exists FROM Result_5555 WHERE roll_no = rec.roll_no;
+
+    IF v_exists = 0 THEN
+      INSERT INTO Result_5555 (roll_no, name, class) VALUES (rec.roll_no, rec.name, v_class);
+    ELSE
+      UPDATE Result_5555 SET name = rec.name, class = v_class WHERE roll_no = rec.roll_no;
+    END IF;
+  END LOOP;
+  COMMIT;
+END;
+/
+
+SELECT * FROM Result_5555 WHERE roll_no = &input_roll_no;
+
+Select * from Result_5555;

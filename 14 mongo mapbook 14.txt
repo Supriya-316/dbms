@@ -1,0 +1,44 @@
+// 0. Switch to your database
+use myLibraryDB;
+
+// 1. Clean up and insert data
+db.books_collection.drop();
+
+db.books_collection.insertMany([
+    { book_id: 1, title: "Book A", author: "Author X", type: "Fiction" },
+    { book_id: 2, title: "Book B", author: "Author Y", type: "Science" },
+    { book_id: 3, title: "Book C", author: "Author X", type: "Fiction" },
+    { book_id: 4, title: "Book D", author: "Author Z", type: "Science" },
+    { book_id: 5, title: "Book E", author: "Author Y", type: "History" },
+    { book_id: 6, title: "Book F", author: "Author Z", type: "Fiction" }
+]);
+
+// 2. Define the 'map' function (The Sorter)
+// This function runs on EVERY book in the collection.
+var mapFunction = function() {
+    // 'this.type' is the key (the bin label, e.g., "Fiction").
+    // '1' is the value (the tally sheet we're tossing in).
+    emit(this.type, 1);
+};
+
+// 3. Define the 'reduce' function (The Counter)
+// This function runs once for each unique key ("Fiction", "Science", "History").
+// keyType = "Fiction"
+// valuesCounts = [1, 1, 1] (the pile of tally sheets)
+var reduceFunction = function(keyType, valuesCounts) {
+    // It reduces the array of 1s to a single number by summing them.
+    return Array.sum(valuesCounts);
+};
+
+// 4. Run the MapReduce operation
+db.books_collection.mapReduce(
+    mapFunction,
+    reduceFunction,
+    {
+        out: "book_type_counts" // The results will be saved in a new collection
+    }
+);
+
+// 5. Show the final result
+// We query the *new* collection that MapReduce created.
+db.book_type_counts.find();

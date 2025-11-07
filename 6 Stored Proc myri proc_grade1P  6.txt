@@ -1,0 +1,56 @@
+-- Create the tables
+create table student_1(
+    roll int primary key,
+    name varchar2(100),
+    total_marks int
+);
+
+create table result(
+    roll int primary key,
+    name varchar2(100),
+    class varchar2(100)
+);
+
+-- Create the procedure
+create or replace procedure proc_grade IS
+    cursor cursor_students is select roll,name,total_marks from student_1;
+    v_class varchar2(100);
+BEGIN
+    for rec in cursor_students loop
+        if rec.total_marks between 990 and 1500 then
+            v_class:='Distinction';
+        ELSIF rec.total_marks BETWEEN 900 AND 989 THEN
+            v_class := 'First Class';
+        ELSIF rec.total_marks BETWEEN 825 AND 899 THEN
+            v_class := 'Higher Second Class';
+        ELSE
+            v_class := 'No Category';
+        END IF;
+
+        -- This "UPSERT" (Update or Insert) logic is excellent.
+        update result set class = v_class where roll = rec.roll;
+
+        if sql%rowcount = 0 then
+            insert into result values(rec.roll,rec.name,v_class);
+        end if;
+
+    end loop;
+    
+    -- **THE FIX: Save all the changes**
+    COMMIT; 
+
+end;
+/
+
+-- Insert the test data
+INSERT INTO student_1 VALUES(1, 'Raj', 1200);
+INSERT INTO student_1 VALUES(2, 'Priya', 950);
+INSERT INTO student_1 VALUES(3, 'Amit', 880);
+INSERT INTO student_1 VALUES(4, 'Neha', 800);
+
+-- Run the procedure
+SET SERVEROUTPUT ON;
+EXEC proc_grade;
+
+-- Check the results
+SELECT * FROM result;

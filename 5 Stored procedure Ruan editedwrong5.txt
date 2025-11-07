@@ -1,0 +1,106 @@
+SET SERVEROUTPUT ON
+SET VERIFY OFF
+
+
+
+-- 1. Create Tables
+CREATE TABLE borrower(
+    roll_no NUMBER,
+    name VARCHAR2(25),
+    dateofissue DATE,
+    name_of_book VARCHAR2(25),
+    status VARCHAR2(20),
+    -- Added a primary key to make the table valid
+    CONSTRAINT pk_borrower PRIMARY KEY (roll_no, name_of_book)
+);
+
+CREATE TABLE fine(
+    roll_no NUMBER,
+    date_of_return DATE,
+    amt NUMBER
+);
+
+-- 2. Insert Data
+INSERT INTO borrower VALUES(45,'ASHUTOSH',TO_DATE('01-08-2022','DD-MM-YYYY'),'HARRY POTTER','PENDING');
+INSERT INTO borrower VALUES(46,'ARYAN',TO_DATE('15-08-2022','DD-MM-YYYY'),'DARK MATTER','PENDING');
+INSERT INTO borrower VALUES(47,'ROHAN',TO_DATE('24-08-2022','DD-MM-YYYY'),'SILENT HILL','PENDING');
+
+-- 3. Create the REQUIRED Stored Procedure
+CREATE OR REPLACE PROCEDURE sp_return_book (
+    p_roll_no IN NUMBER,
+    p_book_name IN VARCHAR2
+)
+IS
+    no_of_days   NUMBER;
+    return_date  DATE := TRUNC(SYSDATE); -- TRUNC here is good
+    temp         NUMBER;
+    doi          DATE;
+    fine         NUMBER := 0; -- Default fine to 0
+BEGIN
+    -- Get the issue date for the specific book and student
+    -- *FIX 1: Used correct 'roll_no' and added 'status' check*
+    SELECT dateofissue INTO doi
+    FROM borrower
+    WHERE roll_no = p_roll_no
+      AND name_of_book = p_book_name
+      AND status = 'PENDING';
+
+    -- Calculate days
+    no_of_days := return_date - TRUNC(doi);
+    DBMS_OUTPUT.PUT_LINE('Number of days: ' || no_of_days);
+
+    -- Calculate fine (your logic was correct)
+    IF (no_of_days > 15 AND no_of_days <= 30) THEN
+        fine := 5 * no_of_days;
+    ELSIF (no_of_days > 30) THEN
+        temp := no_of_days - 30;
+        fine := 150 + temp * 50;
+    END IF; -- If 15 days or less, fine remains 0
+
+    DBMS_OUTPUT.PUT_LINE('Calculated fine: ' || fine);
+
+    -- *FIX 2: Only insert if there is actually a fine*
+    IF fine > 0 THEN
+        INSERT INTO fine (roll_no, date_of_return, amt)
+        VALUES (p_roll_no, return_date, fine);
+    END IF;
+
+    -- *FIX 3: Fixed typo and added 'name_of_book' to prevent data corruption*
+    UPDATE borrower
+    SET status = 'RETURNED'
+    WHERE roll_no = p_roll_no
+      AND name_of_book = p_book_name;
+    
+    COMMIT;
+    DBMS_OUTPUT.PUT_LINE('Success: Book returned.');
+
+EXCEPTION
+    WHEN NO_DATA_FOUND THEN
+        ROLLBACK; -- *FIX 4: Added ROLLBACK*
+        DBMS_OUTPUT.PUT_LINE('Error: No PENDING book found for roll ' || p_roll_no || ' with name "' || p_book_name || '".');
+    WHEN OTHERS THEN
+        ROLLBACK; -- *FIX 4: Added ROLLBACK*
+        DBMS_OUTPUT.PUT_LINE('An unexpected error occurred: ' || SQLERRM);
+END;
+/
+
+-- 4. Execute the Procedure (This is how you test it)
+-- Note: We are using today's date (Nov 7, 2025) for calculations
+BEGIN
+    sp_return_book(45, 'HARRY POTTER'); -- More than 30 days
+END;
+/
+
+BEGIN
+    sp_return_book(47, 'SILENT HILL'); -- More than 30 days
+END;
+/
+
+BEGIN
+    sp_return_book(99, 'BAD BOOK'); -- Exception test
+END;
+/
+
+-- 5. Show Final Results
+select * from borrower;
+select * from fine;

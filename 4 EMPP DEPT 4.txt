@@ -1,0 +1,72 @@
+-- Clean up environment
+DROP TABLE IF EXISTS Emp;
+DROP TABLE IF EXISTS Dept;
+
+-- Create parent table Dept
+CREATE TABLE Dept (
+    deptId INT PRIMARY KEY,
+    deptName VARCHAR(10)
+);
+
+-- Create child table Emp
+CREATE TABLE Emp (
+    empId INT PRIMARY KEY,
+    empName VARCHAR(10),
+    empSal INT,
+    empDeptId INT,
+    CONSTRAINT fk_emp_dept FOREIGN KEY (empDeptId) REFERENCES Dept(deptId)
+);
+
+/*
+-- 1. Insert few Record
+-- We must insert data that will work for the other tasks.
+*/
+
+-- Insert into Dept first
+INSERT INTO Dept (deptId, deptName) VALUES (10, 'IT');
+INSERT INTO Dept (deptId, deptName) VALUES (20, 'HR');
+INSERT INTO Dept (deptId, deptName) VALUES (30, 'Sales');
+INSERT INTO Dept (deptId, deptName) VALUES (40, 'Support');
+
+-- Insert into Emp
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (101, 'Amit', 25000, 10);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (102, 'Rahul', 15000, 30);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (103, 'Priya', 35000, 20);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (104, 'Sneha', 9000, 40);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (105, 'John', 28000, 10);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (106, 'Meera', 30000, 30);
+
+/*
+-- 2. List employees belonging to department 30, 40, or 10
+*/
+SELECT * FROM Emp
+WHERE empDeptId IN (10, 30, 40);
+
+/*
+-- 3. List the employee details whose salary is between 10000 to 30000
+*/
+SELECT * FROM Emp
+WHERE empSal BETWEEN 10000 AND 30000;
+
+/*
+-- 4. List total no of employee
+*/
+SELECT COUNT(*) AS total_employees
+FROM Emp;
+
+/*
+-- 5. List average sal of each deptID
+*/
+SELECT
+    empDeptId,
+    AVG(empSal) AS average_salary
+FROM
+    Emp
+GROUP BY
+    empDeptId;
+
+/*
+-- 6. List employee details in ascending order of salary
+*/
+SELECT * FROM Emp
+ORDER BY empSal ASC;

@@ -1,0 +1,59 @@
+
+-- Step 1: Create the tables
+create table borrower(
+    roll_no int primary key,
+    name varchar2(100),
+    dateofissue date,
+    name_of_book varchar2(100),
+    status char(1)
+);
+
+create table library_audit(
+    roll_no int ,
+    name varchar2(100),
+    dateofissue date,
+    name_of_book varchar2(100),
+    status char(1),
+    audit_timestamp TIMESTAMP
+);
+
+-- Step 2: Create the trigger
+create or replace trigger trg_audit_library 
+before update or delete on borrower 
+for each row 
+begin 
+    insert into library_audit values(
+        :old.roll_no,
+        :old.name,
+        :old.dateofissue,
+        :old.name_of_book,
+        :old.status,
+        systimestamp
+    );
+end;
+/
+
+-- Step 3: Insert the initial data
+INSERT INTO borrower (roll_no, name, dateofissue, name_of_book, status) VALUES
+(101, 'Rahul Sharma', TO_DATE('2025-11-01', 'YYYY-MM-DD'), 'Data Structures', 'I');
+INSERT INTO borrower (roll_no, name, dateofissue, name_of_book, status) VALUES
+(103, 'Suresh Kumar', TO_DATE('2025-11-05', 'YYYY-MM-DD'), 'Algorithms', 'I');
+
+-- Save the initial data
+COMMIT;
+
+-- Step 4: Test the trigger
+UPDATE borrower
+SET status = 'R'
+WHERE roll_no = 101;
+
+DELETE FROM borrower
+WHERE roll_no = 103;
+
+-- Save these changes
+COMMIT;
+
+-- Step 5: Check the results
+-- (Headers removed, just running the queries)
+select * from borrower;
+select * from library_audit;

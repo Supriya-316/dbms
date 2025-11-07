@@ -1,0 +1,40 @@
+// 0. Switch to your database
+use myBankDB;
+
+// 1. Clean up and insert data
+db.bank.drop();
+
+db.bank.insertMany([
+    { cust_id: 1, cust_name: "Amit", branch: "Pune", balance: 5000 },
+    { cust_id: 2, cust_name: "Priya", branch: "Mumbai", balance: 7500 },
+    { cust_id: 3, cust_name: "Rahul", branch: "Pune", balance: 3000 },
+    { cust_id: 4, cust_name: "Sneha", branch: "Delhi", balance: 10000 },
+    { cust_id: 5, cust_name: "John", branch: "Mumbai", balance: 6000 },
+    { cust_id: 6, cust_name: "Meera", branch: "Pune", balance: 8000 }
+]);
+
+var mapFunction = function() {
+    
+    emit(this.branch, this.balance);
+};
+
+
+
+// 3. Define the 'reduce' function
+var reduceFunction = function(keyBranch, valuesBalances) {
+    // It 'reduces' the array of values to a single number.
+    return Array.sum(valuesBalances);
+};
+
+// 4. Run the MapReduce operation
+db.bank.mapReduce(
+    mapFunction,
+    reduceFunction,
+    {
+        out: "branch_balance_totals" // The results will be saved in a new collection
+    }
+);
+
+// 5. Show the final result
+
+db.branch_balance_totals.find();

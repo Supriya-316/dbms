@@ -1,0 +1,46 @@
+-- Clean up environment
+DROP TABLE IF EXISTS Emp;
+DROP TABLE IF EXISTS Dept;
+
+
+-- Step 1: Create Dept Table
+CREATE TABLE Dept (
+    deptId INT PRIMARY KEY,
+    deptName VARCHAR(10)
+);
+
+-- Step 2: Create Emp Table with empName NOT NULL and Foreign Key
+CREATE TABLE Emp (
+    empId INT PRIMARY KEY,
+    empName VARCHAR(10) NOT NULL,
+    empSal INT,
+    empDeptId INT,
+    CONSTRAINT fk_dept FOREIGN KEY (empDeptId) REFERENCES Dept(deptId)
+);
+
+-- Step 3: Insert records into Dept
+INSERT INTO Dept (deptId, deptName) VALUES (1, 'IT');
+INSERT INTO Dept (deptId, deptName) VALUES (2, 'HR');
+INSERT INTO Dept (deptId, deptName) VALUES (3, 'Sales');
+
+-- Step 4: Insert records into Emp
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (101, 'Amrita', 50000, 1);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (102, 'Rahul', 40000, 2);
+INSERT INTO Emp (empId, empName, empSal, empDeptId) VALUES (103, 'Sneha', 45000, 1);
+
+-- Step 5: Add deptLoc column to Dept table
+ALTER TABLE Dept
+ADD deptLoc VARCHAR(10);
+
+-- Step 6: Add UNIQUE constraint to deptLoc
+ALTER TABLE Dept
+ADD CONSTRAINT uq_deptLoc UNIQUE (deptLoc);
+
+-- Step 7: Update deptLoc values
+UPDATE Dept SET deptLoc = 'Pune' WHERE deptId = 1;
+UPDATE Dept SET deptLoc = 'Mumbai' WHERE deptId = 2;
+UPDATE Dept SET deptLoc = 'Delhi' WHERE deptId = 3;
+
+-- Step 8: Verify Data
+SELECT * FROM Dept;
+SELECT * FROM Emp;
